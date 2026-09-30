@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#090909" />
+    <meta name="color-scheme" content="dark" />
+    <style>html{background:#090909}</style>
+    <meta
+      name="description"
+      content="ติดต่อ BOBOK เพื่อปรึกษา Web App, Mobile App, Desktop, IoT, Automation และ Custom Software"
+    />
+    <title>เริ่มต้นโปรเจกต์ — BOBOK®</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <a class="skip" href="#main">ข้ามไปเนื้อหา</a>
+    <header>
+      <a class="logo" href="/">bobok<span>®</span></a>
+      <nav aria-label="เมนูหลัก">
+        <a href="/services/">บริการ</a><a href="/solutions/">โซลูชัน</a
+        ><a href="/process/">วิธีการทำงาน</a><a href="/about/">เกี่ยวกับเรา</a>
+      </nav>
+      <a class="nav-cta active" href="/contact/"
+        >คุยเรื่องโปรเจกต์ <span>↗</span></a
+      ><button class="menu-toggle" aria-expanded="false" aria-label="เปิดเมนู">
+        ☰
+      </button>
+    </header>
+    <main id="main">
+      <section class="section contact contact-page">
+        <div class="contact-copy reveal">
+          <span class="eyebrow">05 / START A PROJECT</span>
+          <h1>
+            LET'S BUILD<br /><span class="outline">THE RIGHT</span><br />THING.
+          </h1>
+          <p>
+            ยังไม่ต้องมีสเปกที่สมบูรณ์ แค่เล่าปัญหา เป้าหมาย
+            หรือสิ่งที่อยากเปลี่ยน เราจะช่วยจัดโจทย์และเสนอขั้นต่อไป
+          </p>
+          <div class="contact-facts">
+            <span>BASED IN THAILAND</span><span>REMOTE-FRIENDLY</span
+            ><span>REPLY WITHIN 1–2 BUSINESS DAYS</span>
+          </div>
+        </div>
+        <form id="contact-form" class="reveal" data-delay="160">
+          <h2>เล่าเกี่ยวกับโปรเจกต์</h2>
+          <div class="form-row">
+            <label
+              >ชื่อของคุณ *<input
+                name="name"
+                required
+                maxlength="100"
+                autocomplete="name"
+                placeholder="ชื่อ–นามสกุล" /></label
+            ><label
+              >บริษัท / องค์กร<input
+                name="company"
+                maxlength="150"
+                autocomplete="organization"
+                placeholder="ชื่อบริษัท (ถ้ามี)"
+            /></label>
+          </div>
+          <div class="form-row">
+            <label
+              >อีเมล *<input
+                type="email"
+                name="email"
+                required
+                maxlength="190"
+                autocomplete="email"
+                placeholder="you@company.com" /></label
+            ><label
+              >เบอร์โทรศัพท์<input
+                type="tel"
+                name="phone"
+                maxlength="30"
+                autocomplete="tel"
+                placeholder="08x-xxx-xxxx"
+            /></label>
+          </div>
+          <label
+            >คุณกำลังมองหาอะไร? *<select name="service" required>
+              <option value="">เลือกบริการที่สนใจ</option>
+              <option>Web Application</option>
+              <option>Mobile Application</option>
+              <option>Desktop Application</option>
+              <option>IoT & Embedded Systems</option>
+              <option>Automation & AI</option>
+              <option>Custom Software & API</option>
+              <option>ยังไม่แน่ใจ / หลายระบบ</option>
+            </select></label
+          ><label
+            >เล่าเกี่ยวกับโปรเจกต์ของคุณ *<textarea
+              name="message"
+              required
+              minlength="10"
+              maxlength="5000"
+              rows="5"
+              placeholder="ปัญหาที่อยากแก้ ผู้ใช้งาน เป้าหมาย หรือระยะเวลาที่ต้องการ..."
+            ></textarea></label
+          ><label class="honey" aria-hidden="true"
+            >Website<input
+              name="website"
+              tabindex="-1"
+              autocomplete="off" /></label
+          ><label class="consent"
+            ><input type="checkbox" name="consent" required /><span
+              >ยินยอมให้ใช้ข้อมูลนี้เพื่อติดต่อกลับเกี่ยวกับโปรเจกต์ ตาม
+              <a href="/privacy.html" target="_blank" rel="noopener"
+                >นโยบายความเป็นส่วนตัว</a
+              ></span
+            ></label
+          ><button class="button light" type="submit">
+            ส่งรายละเอียดโปรเจกต์ <span>↗</span>
+          </button>
+          <p id="form-status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+    </main>
+    <footer>
+      <div class="footer-top">
+        <a class="logo" href="/">bobok<span>®</span></a>
+        <p>THOUGHTFULLY DESIGNED. SOLIDLY ENGINEERED.</p>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span id="year"></span> BOBOK. ALL RIGHTS RESERVED.</span
+        ><span>SOFTWARE / HARDWARE / POSSIBILITIES</span
+        ><a href="/privacy.html">นโยบายความเป็นส่วนตัว</a>
+      </div>
+    </footer>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
