@@ -105,6 +105,22 @@ test("desktop, mobile, form success/error and admin rendering", async () => {
     );
     await page.goto(`${baseURL}/admin/`);
     assert.equal(await page.locator("#login-panel").isVisible(), true);
+    let loginBody;
+    await page.route("**/api/index.php?route=login", async (route) => {
+      loginBody = JSON.parse(route.request().postData());
+      await route.fulfill({ json: { csrf: "next-token" } });
+    });
+    await page.route("**/api/index.php?route=admin/inquiries&page=1", (route) =>
+      route.fulfill({ json: { total: 0, items: [] } }),
+    );
+    await page.locator('#login [name="email"]').fill("admin@example.com");
+    await page.locator('#login [name="password"]').fill("test-password-123");
+    await page.locator('#login button').click();
+    await page.locator("#dashboard").waitFor({ state: "visible" });
+    assert.deepEqual(loginBody, {
+      email: "admin@example.com",
+      password: "test-password-123",
+    });
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();
