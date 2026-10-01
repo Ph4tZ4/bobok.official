@@ -4,8 +4,9 @@ Workflow: `.github/workflows/deploy.yml`.
 
 ## สิ่งที่ POC ตรวจแล้ว
 
-- `z324638-w124tz.ls04.zwhhosting.com:21` และ `ls04.zwhhosting.com:21` ยอมรับ explicit FTPS พร้อมตรวจ certificate/hostname ผ่าน (TLS 1.2)
-- ยังไม่ได้ยืนยัน login, passive data connection, สิทธิ์เขียน หรือ deploy จริง เพราะยังไม่มีบัญชี FTP สำหรับ deploy และ GitHub secrets
+- `ls04.zwhhosting.com:21` ยอมรับ explicit FTPS; GitHub Actions dry run ผ่านการล็อกอินและอ่าน `./public_html/` แล้ว
+- ชื่อ alias `z324638-w124tz.ls04.zwhhosting.com` ทำให้ GitHub Actions ตรวจใบรับรอง TLS ไม่ผ่าน เพราะใบรับรองระบุ `ls04.zwhhosting.com` จึงใช้ชื่อนี้เป็น `FTP_SERVER`
+- ยังไม่ได้ยืนยันสิทธิ์เขียนหรือ deploy จริง; dry run ไม่อัปโหลดไฟล์
 - การ build/test ใช้ GitHub runner; โฮสต์ใช้เพียง PHP + MySQL ไม่ต้องมี Node.js หรือ SSH
 
 ## ตั้งค่าครั้งเดียว
@@ -18,7 +19,7 @@ Workflow: `.github/workflows/deploy.yml`.
 
 | Secret | ค่า |
 | --- | --- |
-| `FTP_SERVER` | `z324638-w124tz.ls04.zwhhosting.com` (ไม่มี protocol/path) |
+| `FTP_SERVER` | `ls04.zwhhosting.com` (ไม่มี protocol/path) |
 | `FTP_USERNAME` | `bobokofficial@bobok.site` |
 | `FTP_PASSWORD` | รหัสผ่านของบัญชี FTP deploy |
 
