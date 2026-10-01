@@ -38,7 +38,14 @@ test("desktop, mobile, form success/error and admin rendering", async () => {
       );
     }
     await page.goto(baseURL + "/about/");
-    assert.equal(await page.locator(".leader-image img").isVisible(), true);
+    const teamImages = page.locator(".leader-image img");
+    assert.equal(await teamImages.count(), 6);
+    for (const image of await teamImages.all()) {
+      await image.scrollIntoViewIfNeeded();
+      assert.equal(await image.isVisible(), true);
+      await image.evaluate((element) => element.decode());
+      assert.ok(await image.evaluate((element) => element.naturalWidth > 0));
+    }
     await page.goto(baseURL);
     await page.screenshot({ path: "/tmp/bobok-desktop.png", fullPage: true });
     assert.equal(
@@ -62,7 +69,7 @@ test("desktop, mobile, form success/error and admin rendering", async () => {
     await page.route("**/api/index.php?route=inquiries", (r) =>
       r.fulfill({ status: 503, json: { error: "ระบบยังไม่พร้อมใช้งาน" } }),
     );
-    await page.locator("#contact-form button").click();
+    await page.locator('#contact-form button[type="submit"]').click();
     await page.waitForFunction(() =>
       document
         .querySelector("#form-status")
@@ -72,7 +79,7 @@ test("desktop, mobile, form success/error and admin rendering", async () => {
     await page.route("**/api/index.php?route=inquiries", (r) =>
       r.fulfill({ status: 201, json: { ok: true } }),
     );
-    await page.locator("#contact-form button").click();
+    await page.locator('#contact-form button[type="submit"]').click();
     await page.waitForFunction(() =>
       document.querySelector("#form-status").textContent.includes("เรียบร้อย"),
     );

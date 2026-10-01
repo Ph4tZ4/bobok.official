@@ -35,6 +35,8 @@ npm run build
 
 ## Deploy DirectAdmin → bobok.site
 
+สำหรับ CI/CD ผ่าน FTPS ดู [คู่มือตั้งค่า GitHub Actions](docs/ftps-deploy.md): PR รัน test/build; push main deploy อัตโนมัติเมื่อเปิด `DEPLOY_ENABLED` และตั้ง secrets ครบ รองรับ dry run ก่อนเปิดใช้งาน
+
 1. Backup เว็บเดิมก่อนแทนที่ไฟล์ เปิด Domain Setup เลือก `bobok.site`; เลือก PHP 8.1+ และเปิด extension `pdo_mysql` และ sessions
 2. สร้างฐานข้อมูลและ DB user ใน MySQL Management จดชื่อเต็มที่ DirectAdmin เติม prefix แล้ว import `schema.sql` ผ่าน phpMyAdmin
 3. Build แล้วอัปโหลด **ไฟล์ภายใน** `dist/` รวม `.htaccess` ไป `/home/USERNAME/domains/bobok.site/public_html/` (ไม่ใช่อัปโหลดโฟลเดอร์ dist ครอบอีกชั้น)

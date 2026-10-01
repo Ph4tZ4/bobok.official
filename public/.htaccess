@@ -6,6 +6,6 @@ DirectoryIndex index.html
  Header always set Referrer-Policy "strict-origin-when-cross-origin"
  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
 </IfModule>
-<FilesMatch "^(config.*|\.env.*|schema\.sql|.*\.log)$">
+<FilesMatch "^(config.*|\.env.*|schema\.sql|.*\.log|\.ftp-deploy-sync-state\.json)$">
  Require all denied
 </FilesMatch>

@@ -1,0 +1,159 @@
+name: Test and deploy
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Preview FTP changes without uploading
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: bobok-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Check PHP syntax
+        run: |
+          php -l public/api/index.php
+          php -l scripts/create-admin.php
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - name: Test built website
+        env:
+          VITE_PORT: '4173'
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/bobok-preview.log 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then break; fi
+            sleep 1
+          done
+          npm test
+      - name: Prepare deploy artifact
+        run: |
+          find dist -name .DS_Store -delete
+          node scripts/prepare-deploy.mjs
+          tar -czf site.tar.gz -C dist .
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: site-${{ github.sha }}-${{ github.run_attempt }}
+          path: site.tar.gz
+          retention-days: 14
+          if-no-files-found: error
+
+  deploy:
+    needs: build
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && vars.DEPLOY_ENABLED == 'true'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: FTP
+      url: https://bobok.site
+    steps:
+      - name: Download tested artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          ARTIFACT_NAME: site-${{ github.sha }}-${{ github.run_attempt }}
+        run: |
+          gh run download "$RUN_ID" --name "$ARTIFACT_NAME" --dir artifact
+          mkdir dist
+          tar -xzf artifact/site.tar.gz -C dist
+      - name: Validate FTP configuration
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          for key in FTP_SERVER FTP_USERNAME FTP_PASSWORD; do
+            if [ -z "${!key}" ]; then
+              echo "::error::Missing secret: $key"
+              exit 1
+            fi
+          done
+      - name: Deploy through verified FTPS
+        uses: SamKirkland/FTP-Deploy-Action@3a9c65ae0fc12ac924ccef8afc26941cc43aad0b # v4.4.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          security: strict
+          local-dir: ./dist/
+          # FTP user's root is /home/zwtzlszw/domains/bobok.site.
+          server-dir: ./public_html/
+          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/node_modules/**
+            **/.DS_Store
+            **/.env*
+            **/config*.php
+            **/*.sql
+            **/*.pem
+            **/*.key
+            **/uploads/**
+            **/.well-known/**
+      - name: Verify deployed release and database API
+        if: github.event_name != 'workflow_dispatch' || !inputs.dry_run
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+          EXPECTED_RUN: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          const base = 'https://bobok.site';
+          for (let attempt = 1; attempt <= 5; attempt++) {
+            try {
+              const get = async (path) => {
+                const url = new URL(path, base);
+                url.searchParams.set('_deploy', `${process.env.EXPECTED_RUN}-${attempt}`);
+                const response = await fetch(url, {signal: AbortSignal.timeout(15000), headers: {'Cache-Control': 'no-cache'}});
+                assert.equal(response.status, 200, `${path}: HTTP ${response.status}`);
+                return response;
+              };
+              const release = await (await get('/deployment.json')).json();
+              assert.equal(release.sha, process.env.EXPECTED_SHA);
+              assert.equal(release.run, process.env.EXPECTED_RUN);
+              for (const path of ['/', '/services/', '/solutions/', '/process/', '/about/', '/contact/', '/admin/']) {
+                assert.match(await (await get(path)).text(), /<html/i);
+              }
+              const api = await (await get('/api/index.php?route=content')).json();
+              assert.ok(api.content && typeof api.content === 'object');
+              console.log('Release, pages and database API verified.');
+              break;
+            } catch (error) {
+              if (attempt === 5) throw error;
+              console.log(`Verification attempt ${attempt} failed; retrying.`);
+              await new Promise(resolve => setTimeout(resolve, 10000));
+            }
+          }
+          JS
